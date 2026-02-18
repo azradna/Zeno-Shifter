@@ -75,6 +75,73 @@ export const resolveConflicts = async (tasks: Task[], globalRule: PriorityRule):
   }
 };
 
+/**
+ * ZENO Suggestion Engine
+ * Takes existing tasks and a list of new tasks without times, returns a merged optimized timeline.
+ */
+export const suggestTasks = async (
+  currentTasks: Task[], 
+  backlog: { title: string; duration: number; importance: number }[],
+  globalRule: PriorityRule,
+  date: string
+): Promise<Task[]> => {
+  const prompt = `
+    You are ZENO, an AI Temporal Simulation Engine.
+    I have an existing schedule for ${date}: ${JSON.stringify(currentTasks)}.
+    I have a backlog of tasks to add: ${JSON.stringify(backlog)}.
+    
+    Current Optimization Priority: ${globalRule}.
+    
+    Task:
+    1. Create new Task objects for the backlog items.
+    2. Suggest the BEST startTimes for these new tasks so they don't conflict with existing ones.
+    3. If conflicts are unavoidable, shift existing tasks slightly to accommodate high-importance backlog items.
+    4. Assign reasonable default values for urgency (match importance) and energy (default 3) for the new tasks.
+    5. Return the COMPLETE merged list of all tasks.
+    6. Time window: 07:00 to 23:00.
+    
+    Output JSON array of Task objects.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-flash-preview',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.OBJECT,
+            properties: {
+              id: { type: Type.STRING },
+              title: { type: Type.STRING },
+              startTime: { type: Type.NUMBER },
+              duration: { type: Type.NUMBER },
+              type: { type: Type.STRING },
+              urgency: { type: Type.NUMBER },
+              importance: { type: Type.NUMBER },
+              energyLevel: { type: Type.NUMBER },
+              manaCost: { type: Type.NUMBER },
+              priority: { type: Type.NUMBER },
+              date: { type: Type.STRING }
+            },
+            required: ["id", "title", "startTime", "duration", "type", "urgency", "importance", "energyLevel", "manaCost", "priority", "date"]
+          }
+        }
+      }
+    });
+
+    if (response.text) {
+      return JSON.parse(response.text.trim());
+    }
+    return currentTasks;
+  } catch (error) {
+    console.error("Gemini Suggestion Error:", error);
+    return currentTasks;
+  }
+};
+
 function fallbackResolver(tasks: Task[]): Task[] {
   const sorted = [...tasks].sort((a, b) => (b.urgency + b.importance) - (a.urgency + a.importance));
   const resolved: Task[] = [];

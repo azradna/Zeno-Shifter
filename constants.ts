@@ -1,10 +1,13 @@
 
 import { Task } from './types';
 
+const today = new Date().toISOString().split('T')[0];
+
 export const INITIAL_TASKS: Task[] = [
   {
     id: '1',
     title: 'Morning Code Audit',
+    date: today,
     startTime: 9,
     duration: 2,
     type: 'Work',
@@ -17,6 +20,7 @@ export const INITIAL_TASKS: Task[] = [
   {
     id: '2',
     title: 'Solar Core Workout',
+    date: today,
     startTime: 12,
     duration: 1,
     type: 'Health',
@@ -29,6 +33,7 @@ export const INITIAL_TASKS: Task[] = [
   {
     id: '3',
     title: 'Nebula Protocol Lunch',
+    date: today,
     startTime: 13.5,
     duration: 1,
     type: 'Personal',

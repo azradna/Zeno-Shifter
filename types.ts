@@ -6,6 +6,7 @@ export type PriorityRule = 'urgency' | 'importance' | 'energy';
 export interface Task {
   id: string;
   title: string;
+  date: string;     // ISO format YYYY-MM-DD
   startTime: number; // Hour in 24h format
   duration: number;  // Hours
   type: TaskType;
