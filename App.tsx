@@ -192,12 +192,6 @@ const App: React.FC = () => {
     addToast("Reactor Core Charging", 25, 2);
   };
 
-  const handleClearTimeline = () => {
-    setTasks(tasks.filter(t => t.date !== selectedDate));
-    setIsSettingsOpen(false);
-    addToast("Local Buffer Cleared", 0);
-  };
-
   const calendarDates = useMemo(() => {
     const dates = [];
     for (let i = -2; i < 12; i++) {
@@ -219,7 +213,6 @@ const App: React.FC = () => {
     <div className="min-h-screen relative text-slate-700 selection:bg-indigo-100 selection:text-indigo-900">
       <CustomCursor />
 
-      {/* Navigation HUD */}
       <header className="fixed top-0 left-0 w-full z-50 bg-white/30 backdrop-blur-3xl border-b border-white px-10 py-5">
         <div className="max-w-[1920px] mx-auto flex justify-between items-center">
           <div className="flex items-center gap-8">
@@ -257,10 +250,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Command Center */}
       <main className="max-w-[1920px] mx-auto pt-48 pb-40 px-10">
-        
-        {/* Date Selector HUD */}
         <div className="mb-20">
           <div className="flex items-center gap-5 mb-8">
              <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-slate-200" />
@@ -270,7 +260,6 @@ const App: React.FC = () => {
              </div>
              <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-slate-200" />
           </div>
-          
           <div className="flex gap-5 overflow-x-auto pb-8 scrollbar-hide no-scrollbar -mx-4 px-4">
             {calendarDates.map((date) => (
               <motion.button
@@ -294,26 +283,21 @@ const App: React.FC = () => {
                 <p className={`text-2xl font-orbitron font-black ${selectedDate === date ? 'text-slate-800' : 'text-slate-400'}`}>
                   {date.split('-')[2]}
                 </p>
-                <div className={`mt-3 h-1 w-6 rounded-full transition-colors ${selectedDate === date ? 'bg-indigo-200' : 'bg-transparent'}`} />
               </motion.button>
             ))}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 xl:grid-cols-12 gap-8">
-          
-          {/* Column 1: User Manual */}
           <div className="lg:col-span-3 xl:col-span-2 order-1">
             <UserManual />
           </div>
 
-          {/* Column 2: Stats & Simulator */}
           <div className="lg:col-span-3 xl:col-span-3 space-y-8 order-3 lg:order-2">
             <SidePanel stats={stats} onRecharge={handleRecharge} dayLoad={dayLoad} />
             <SuggestHub onSimulate={handleSimulate} isSimulating={isSimulating} />
           </div>
 
-          {/* Column 3: Timeline Display */}
           <div className="lg:col-span-6 xl:col-span-5 order-2 lg:order-3">
             <AnimatePresence mode="wait">
               {suggestionPreview ? (
@@ -331,7 +315,6 @@ const App: React.FC = () => {
                       </div>
                       <div>
                         <h2 className="text-2xl font-orbitron font-black text-teal-800 uppercase italic tracking-tighter">Reality Preview</h2>
-                        <p className="text-[11px] text-teal-600 font-orbitron font-black uppercase tracking-[0.2em] mt-1">Applying optimized permutations</p>
                       </div>
                     </div>
                     <div className="flex gap-4">
@@ -353,7 +336,6 @@ const App: React.FC = () => {
                         <Sparkles size={24} className="text-indigo-500 animate-pulse" />
                         Temporal Stream
                       </h2>
-                      <span className="text-[11px] text-slate-400 font-orbitron font-black uppercase tracking-[0.3em] ml-11 mt-1 italic">Focus: {selectedDate}</span>
                     </div>
                     <motion.button
                       whileHover={{ scale: 1.05, y: -2 }}
@@ -364,85 +346,48 @@ const App: React.FC = () => {
                       <PlusCircle size={22} /> Anchor Node
                     </motion.button>
                   </div>
-                  
                   {dailyTasks.length > 0 ? (
                     <TimePath tasks={dailyTasks} />
                   ) : (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="flex flex-col items-center justify-center py-32 bg-white/20 rounded-[5rem] border-2 border-dashed border-slate-200"
-                    >
+                    <div className="flex flex-col items-center justify-center py-32 bg-white/20 rounded-[5rem] border-2 border-dashed border-slate-200">
                       <Terminal className="text-slate-200 mb-8" size={64} />
                       <p className="text-lg font-orbitron text-slate-300 uppercase tracking-[0.6em] font-black text-center">Empty Horizon</p>
-                      <button onClick={() => setIsAddingTask(true)} className="mt-12 px-12 py-4 text-[12px] font-orbitron text-indigo-600 font-black uppercase tracking-widest bg-white rounded-full border border-indigo-100 shadow-md hover:shadow-lg transition-all">
-                        Initiate Sequence
-                      </button>
-                    </motion.div>
+                    </div>
                   )}
                 </div>
               )}
             </AnimatePresence>
           </div>
 
-          {/* Column 4: Protocols Hub */}
           <div className="lg:col-span-12 xl:col-span-2 order-4">
             <div className="sticky top-48 space-y-8">
               <div className="glass-card p-10 rounded-[4rem] shadow-xl relative overflow-hidden hud-border">
                 <h3 className="text-[13px] font-orbitron text-slate-400 mb-12 uppercase tracking-[0.4em] font-black italic">Command Core</h3>
-                
                 <div className="space-y-5">
-                  {[
-                    { id: 'urgency', label: 'Urgency', icon: Clock, color: 'text-amber-500', bg: 'bg-amber-50' },
-                    { id: 'importance', label: 'Impact', icon: Target, color: 'text-rose-500', bg: 'bg-rose-50' },
-                    { id: 'energy', label: 'Energy', icon: BatteryCharging, color: 'text-teal-500', bg: 'bg-teal-50' }
-                  ].map((rule) => (
-                    <motion.button
-                      key={rule.id}
-                      onClick={() => setSelectedRule(rule.id as PriorityRule)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-3xl border-2 transition-all text-left ${
-                        selectedRule === rule.id 
-                          ? `bg-white border-indigo-500 shadow-xl scale-[1.02]` 
-                          : 'bg-white/40 border-transparent opacity-50 hover:opacity-100'
+                  {['urgency', 'importance', 'energy'].map((id) => (
+                    <button
+                      key={id}
+                      onClick={() => setSelectedRule(id as PriorityRule)}
+                      className={`w-full flex items-center gap-4 p-4 rounded-3xl border-2 transition-all ${
+                        selectedRule === id ? 'bg-white border-indigo-500 shadow-xl' : 'bg-white/40 border-transparent opacity-50'
                       }`}
                     >
-                      <div className={`p-2.5 rounded-2xl ${rule.bg} ${rule.color}`}>
-                         <rule.icon size={18} />
-                      </div>
-                      <span className="font-orbitron text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">
-                        {rule.label}
-                      </span>
-                    </motion.button>
+                      <span className="font-orbitron text-[11px] font-black uppercase tracking-[0.1em] text-slate-700">{id}</span>
+                    </button>
                   ))}
                 </div>
-
                 <div className="h-[1px] bg-slate-100 my-10" />
-
                 <div className="space-y-6">
-                  <button onClick={injectChaos} className="w-full flex items-center justify-between p-5 rounded-3xl bg-rose-50 border border-rose-100 text-rose-500 font-orbitron text-[11px] font-black uppercase tracking-widest shadow-md hover:bg-rose-100 transition-all group">
-                    <div className="flex items-center gap-4">
-                      <Flame size={18} className="group-hover:animate-bounce" />
-                      <span>Chaos</span>
-                    </div>
-                    <ChevronRight size={16} />
+                  <button onClick={injectChaos} className="w-full flex items-center justify-between p-5 rounded-3xl bg-rose-50 border border-rose-100 text-rose-500 font-orbitron text-[11px] font-black uppercase tracking-widest shadow-md">
+                    <span>Chaos</span>
+                    <Flame size={18} />
                   </button>
-
                   <button
                     onClick={handleResolve}
                     disabled={isResolving || stats.mana < 20 || dailyTasks.length === 0}
-                    className={`w-full flex items-center justify-between p-6 rounded-[2.5rem] border-2 font-orbitron text-[12px] font-black uppercase tracking-[0.2em] transition-all
-                      ${isResolving 
-                        ? 'bg-indigo-100 border-indigo-200 text-indigo-400 cursor-wait' 
-                        : (stats.mana < 20 || dailyTasks.length === 0)
-                        ? 'bg-slate-100 border-slate-200 text-slate-300 cursor-not-allowed'
-                        : 'bg-indigo-600 border-indigo-400 text-white shadow-[0_20px_60px_rgba(79,70,229,0.3)] hover:bg-indigo-700 hover:scale-[1.02]'
-                      }
-                    `}
+                    className="w-full flex items-center justify-between p-6 rounded-[2.5rem] bg-indigo-600 text-white font-orbitron text-[12px] font-black uppercase tracking-[0.2em] shadow-xl disabled:bg-slate-100 disabled:text-slate-300"
                   >
-                    <div className="flex items-center gap-4">
-                      <Zap size={22} className={isResolving ? 'animate-spin' : ''} />
-                      <span>{isResolving ? 'Resolving' : 'Sync'}</span>
-                    </div>
+                    <span>{isResolving ? 'Resolving' : 'Sync Stream'}</span>
                     <RefreshCcw size={18} className={isResolving ? 'animate-spin' : ''} />
                   </button>
                 </div>
@@ -452,7 +397,6 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      {/* Deploy Node Modal */}
       <AnimatePresence>
         {isAddingTask && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-8">
@@ -461,4 +405,51 @@ const App: React.FC = () => {
               <button onClick={() => setIsAddingTask(false)} className="absolute top-10 right-10 text-slate-300 hover:text-slate-800 transition-all">
                  <X size={40} />
               </button>
-              <h2 className="text-4xl font-orbitron font-black text-slate-800 uppercase tracking-tighter mb-12 italic">Anchor
+              <h2 className="text-4xl font-orbitron font-black text-slate-800 uppercase tracking-tighter mb-12 italic">Anchor Node</h2>
+              <form onSubmit={handleAddTask} className="space-y-10">
+                <div className="space-y-3">
+                    <label className="text-[10px] font-orbitron font-black uppercase text-slate-400 tracking-[0.3em] ml-2">Title</label>
+                    <input required autoFocus value={newTask.title} onChange={e => setNewTask({...newTask, title: e.target.value})} placeholder="Operation designation..." className="w-full bg-slate-50 border-2 border-slate-100 rounded-3xl p-8 text-2xl focus:border-indigo-500 focus:outline-none transition-all font-space-grotesk placeholder:opacity-30" />
+                </div>
+                <div className="grid grid-cols-2 gap-8">
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-orbitron font-black uppercase text-slate-400 tracking-[0.3em] ml-2">Temporal Date</label>
+                      <input type="date" value={newTask.date} onChange={e => setNewTask({...newTask, date: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-6 text-[14px] font-orbitron font-black text-slate-700" />
+                   </div>
+                   <div className="space-y-3">
+                      <label className="text-[10px] font-orbitron font-black uppercase text-slate-400 tracking-[0.3em] ml-2">Start Vector (H)</label>
+                      <input type="number" min="7" max="23" value={newTask.startTime} onChange={e => setNewTask({...newTask, startTime: parseFloat(e.target.value)})} className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-6 text-[14px] font-orbitron font-black text-slate-700" />
+                   </div>
+                </div>
+                <button type="submit" className="w-full py-8 rounded-[2.5rem] bg-indigo-600 text-white font-orbitron font-black text-lg uppercase tracking-[0.4em] shadow-2xl hover:bg-indigo-700 transition-all border border-indigo-400">Deploy Link</button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      <div className="fixed bottom-12 right-12 z-[200] flex flex-col gap-6 pointer-events-none">
+        <AnimatePresence>
+          {toasts.map(toast => (
+            <motion.div key={toast.id} initial={{ opacity: 0, x: 100, scale: 0.8 }} animate={{ opacity: 1, x: 0, scale: 1 }} exit={{ opacity: 0, x: 50, scale: 0.9 }} className="bg-white/90 backdrop-blur-2xl p-8 rounded-[3rem] shadow-[0_25px_60px_rgba(0,0,0,0.1)] border border-white flex items-center gap-8 min-w-[420px]">
+              <div className="w-16 h-16 rounded-3xl bg-indigo-50 flex items-center justify-center text-indigo-500 border border-indigo-100 shadow-inner">
+                <Award size={32} />
+              </div>
+              <div className="flex-1">
+                <p className="text-[15px] font-black text-slate-800 uppercase tracking-tighter font-orbitron italic">{toast.msg}</p>
+                <div className="flex items-center gap-6 mt-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-indigo-500" />
+                    <p className="text-[12px] text-indigo-600 font-black font-orbitron tracking-widest">+{toast.xp} XP</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
+
+export default App;
