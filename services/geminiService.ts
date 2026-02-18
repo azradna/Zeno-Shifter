@@ -9,39 +9,40 @@ export const resolveConflicts = async (tasks: Task[], globalRule: PriorityRule):
   
   switch(globalRule) {
     case 'urgency':
-      strategyDescription = "GLOBAL STRATEGY: URGENCY. Tasks with the highest individual 'urgency' ratings must be prioritized and kept as close to their original start times as possible. Move low-urgency tasks to fill gaps.";
+      strategyDescription = "GLOBAL STRATEGY: URGENCY. Prioritize tasks with high 'urgency'. Treat urgent tasks as immutable and shift non-urgent tasks to the earliest possible open slots.";
       break;
     case 'importance':
-      strategyDescription = "GLOBAL STRATEGY: STRATEGIC IMPACT. Re-organize the day so that tasks with high 'importance' ratings occupy the most focused slots. Lower importance tasks can be shifted or grouped late in the day.";
+      strategyDescription = "GLOBAL STRATEGY: STRATEGIC IMPACT. Prioritize tasks with high 'importance'. Ensure high-impact tasks occupy optimal day slots. Move low-importance tasks to accommodate them.";
       break;
     case 'energy':
-      strategyDescription = "GLOBAL STRATEGY: ENERGY FLOW. Use the 'energyLevel' metric to prevent burnout. Ensure high-energy tasks are not back-to-back. Use low-energy tasks or health tasks as recovery periods.";
+      strategyDescription = "GLOBAL STRATEGY: ENERGY FLOW. Distribute 'energyLevel' 4-5 tasks so they aren't clumped. Use low energy tasks as buffers.";
       break;
     default:
       strategyDescription = "Balanced optimization across all metrics.";
   }
 
   const prompt = `
-    You are ZENO, an advanced AI Time Bender in a sci-fi universe.
-    You have a list of tasks with scheduling conflicts (overlaps).
+    You are ZENO, a Master of Temporal Mechanics. Your goal is to resolve all scheduling overlaps in the provided task list.
     
-    ${strategyDescription}
+    SYSTEM DIRECTIVES:
+    1. ZERO TOLERANCE FOR OVERLAPS: No two tasks can occupy the same time slot. 
+    2. ANCHOR CHAOS NODES: Tasks with type 'Chaos' are temporal emergencies. They are FIXED ANCHORS. Do NOT move them unless absolutely impossible to resolve otherwise. Move ALL OTHER tasks around them.
+    3. PRIORITY HIERARCHY: ${strategyDescription}
+    4. TIME BOUNDARIES: Work only within 07:00 and 23:00.
+    5. DATA INTEGRITY: Do not change the 'date', 'id', 'duration', or 'title' of any task. Only modify 'startTime'.
     
-    General Rules:
-    1. Resolve all overlaps. No two tasks can happen at the same time.
-    2. Respect the individual Task Metrics (Urgency, Importance, Energy Level).
-    3. Keep durations EXACTLY the same.
-    4. Valid time window: 07:00 to 23:00.
-    5. Return a valid JSON array of ALL tasks with updated 'startTime' values.
-
-    Task Pool: ${JSON.stringify(tasks)}
+    Current Tasks (with conflicts):
+    ${JSON.stringify(tasks)}
+    
+    Return a valid JSON array of ALL input tasks with resolved 'startTime' values.
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
+        thinkingConfig: { thinkingBudget: 16000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -50,6 +51,7 @@ export const resolveConflicts = async (tasks: Task[], globalRule: PriorityRule):
             properties: {
               id: { type: Type.STRING },
               title: { type: Type.STRING },
+              date: { type: Type.STRING },
               startTime: { type: Type.NUMBER },
               duration: { type: Type.NUMBER },
               type: { type: Type.STRING },
@@ -59,14 +61,16 @@ export const resolveConflicts = async (tasks: Task[], globalRule: PriorityRule):
               manaCost: { type: Type.NUMBER },
               priority: { type: Type.NUMBER },
             },
-            required: ["id", "title", "startTime", "duration", "type", "urgency", "importance", "energyLevel", "manaCost", "priority"]
+            required: ["id", "title", "date", "startTime", "duration", "type", "urgency", "importance", "energyLevel", "manaCost", "priority"]
           }
         }
       }
     });
 
     if (response.text) {
-      return JSON.parse(response.text.trim());
+      const result = JSON.parse(response.text.trim());
+      console.log("ZENO Sync Result:", result);
+      return result;
     }
     return tasks;
   } catch (error) {
@@ -75,10 +79,6 @@ export const resolveConflicts = async (tasks: Task[], globalRule: PriorityRule):
   }
 };
 
-/**
- * ZENO Suggestion Engine
- * Takes existing tasks and a list of new tasks without times, returns a merged optimized timeline.
- */
 export const suggestTasks = async (
   currentTasks: Task[], 
   backlog: { title: string; duration: number; importance: number }[],
@@ -87,27 +87,26 @@ export const suggestTasks = async (
 ): Promise<Task[]> => {
   const prompt = `
     You are ZENO, an AI Temporal Simulation Engine.
-    I have an existing schedule for ${date}: ${JSON.stringify(currentTasks)}.
-    I have a backlog of tasks to add: ${JSON.stringify(backlog)}.
+    Current Schedule for ${date}: ${JSON.stringify(currentTasks)}.
+    Items to Integrate: ${JSON.stringify(backlog)}.
     
-    Current Optimization Priority: ${globalRule}.
+    Strategy: ${globalRule}.
     
     Task:
-    1. Create new Task objects for the backlog items.
-    2. Suggest the BEST startTimes for these new tasks so they don't conflict with existing ones.
-    3. If conflicts are unavoidable, shift existing tasks slightly to accommodate high-importance backlog items.
-    4. Assign reasonable default values for urgency (match importance) and energy (default 3) for the new tasks.
-    5. Return the COMPLETE merged list of all tasks.
-    6. Time window: 07:00 to 23:00.
+    1. Integrate backlog items into the timeline.
+    2. Shift existing tasks if necessary to fit high-importance items.
+    3. Ensure no overlaps.
+    4. Boundaries: 07:00 to 23:00.
     
-    Output JSON array of Task objects.
+    Output the COMPLETE merged list of all Task objects in JSON.
   `;
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
+      model: 'gemini-3-pro-preview',
       contents: prompt,
       config: {
+        thinkingConfig: { thinkingBudget: 12000 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.ARRAY,
@@ -143,13 +142,27 @@ export const suggestTasks = async (
 };
 
 function fallbackResolver(tasks: Task[]): Task[] {
-  const sorted = [...tasks].sort((a, b) => (b.urgency + b.importance) - (a.urgency + a.importance));
-  const resolved: Task[] = [];
-  let currentEnd = 8;
-  sorted.forEach(task => {
-    const newStart = Math.max(8, currentEnd);
-    resolved.push({ ...task, startTime: newStart });
-    currentEnd = newStart + task.duration;
+  // Sort: Chaos first, then importance + urgency
+  const sorted = [...tasks].sort((a, b) => {
+    if (a.type === 'Chaos' && b.type !== 'Chaos') return -1;
+    if (b.type === 'Chaos' && a.type !== 'Chaos') return 1;
+    return (b.importance + b.urgency) - (a.importance + a.urgency);
   });
+
+  const resolved: Task[] = [];
+  let currentEnd = 7.0; // Start day at 7 AM
+
+  sorted.forEach(task => {
+    let start = Math.max(currentEnd, 7.0);
+    // If it's chaos, try to keep it where it was if possible, otherwise move after
+    if (task.type === 'Chaos') {
+      // Very naive logic just to ensure no overlap in fallback
+      resolved.push({ ...task, startTime: start });
+    } else {
+      resolved.push({ ...task, startTime: start });
+    }
+    currentEnd = start + task.duration;
+  });
+
   return resolved;
 }

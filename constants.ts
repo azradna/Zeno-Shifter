@@ -46,7 +46,7 @@ export const INITIAL_TASKS: Task[] = [
 ];
 
 export const CHAOS_EVENTS = [
-  { title: 'Server Warp Breach', type: 'Work' as const, duration: 1.5, urgency: 5, importance: 5, energyLevel: 5, manaCost: 60, priority: 5 },
-  { title: 'Emergency AI Council', type: 'Work' as const, duration: 2, urgency: 4, importance: 5, energyLevel: 4, manaCost: 50, priority: 4 },
-  { title: 'Unexpected Wormhole Call', type: 'Personal' as const, duration: 0.5, urgency: 4, importance: 2, energyLevel: 2, manaCost: 25, priority: 3 },
+  { title: 'Server Warp Breach', type: 'Chaos' as const, duration: 1.5, urgency: 5, importance: 5, energyLevel: 5, manaCost: 60, priority: 5 },
+  { title: 'Emergency AI Council', type: 'Chaos' as const, duration: 2, urgency: 4, importance: 5, energyLevel: 4, manaCost: 50, priority: 4 },
+  { title: 'Unexpected Wormhole Call', type: 'Chaos' as const, duration: 0.5, urgency: 4, importance: 2, energyLevel: 2, manaCost: 25, priority: 3 },
 ];

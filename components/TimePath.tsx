@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Task } from '../types';
-import { Clock, Zap, AlertTriangle, Target, Activity, Flame, ShieldAlert } from 'lucide-react';
+import { Clock, Zap, AlertTriangle, Target, Activity, Flame, ShieldAlert, Cpu } from 'lucide-react';
 
 interface TimePathProps {
   tasks: Task[];
@@ -26,16 +26,16 @@ const TimePath: React.FC<TimePathProps> = ({ tasks }) => {
   };
 
   const MetricBar = ({ value, label, icon: Icon, color }: { value: number, label: string, icon: any, color: string }) => (
-    <div className="flex flex-col gap-1 flex-1">
-      <div className="flex items-center justify-between text-[8px] font-orbitron text-white/30 uppercase tracking-tighter">
-        <span className="flex items-center gap-1"><Icon size={8} className={color} /> {label}</span>
-        <span className="text-white/60">{value}/5</span>
+    <div className="flex flex-col gap-1.5 flex-1">
+      <div className="flex items-center justify-between text-[7px] font-orbitron text-slate-400 uppercase tracking-widest font-black">
+        <span className="flex items-center gap-1"><Icon size={9} className={color} /> {label}</span>
+        <span className="text-slate-600">{value}/5</span>
       </div>
-      <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+      <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden border border-slate-200/50">
         <motion.div 
           initial={{ width: 0 }}
           animate={{ width: `${(value / 5) * 100}%` }}
-          className={`h-full ${color.replace('text-', 'bg-')} shadow-[0_0_8px_currentColor]`} 
+          className={`h-full ${color.replace('text-', 'bg-')} shadow-sm`} 
         />
       </div>
     </div>
@@ -43,81 +43,77 @@ const TimePath: React.FC<TimePathProps> = ({ tasks }) => {
 
   return (
     <div className="relative w-full py-16 px-4 md:px-12 min-h-[600px]">
-      {/* Central Path Line */}
-      <div className="absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2 overflow-hidden opacity-20 pointer-events-none">
-         <div className="h-full w-full bg-gradient-to-b from-purple-500 via-blue-500 to-transparent" />
-         <motion.div 
-           animate={{ y: ['0%', '100%'] }}
-           transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-           className="absolute top-0 left-0 w-full h-20 bg-white"
-         />
+      {/* Central Conduit Line */}
+      <div className="absolute left-1/2 top-0 h-full w-[1px] -translate-x-1/2 bg-slate-200 pointer-events-none" />
+      <div className="absolute left-1/2 top-0 h-full w-[6px] -translate-x-1/2 overflow-hidden opacity-30 pointer-events-none blur-sm">
+         <div className="h-full w-full bg-gradient-to-b from-indigo-500 via-teal-500 to-indigo-500" />
       </div>
 
-      <div className="relative flex flex-col items-center gap-12">
+      <div className="relative flex flex-col items-center gap-16">
         <AnimatePresence mode="popLayout">
           {sortedTasks.map((task, index) => {
             const hasConflict = checkConflict(task);
             const isChaos = task.type === 'Chaos';
             const isLeft = index % 2 === 0;
-            const offset = isLeft ? 'md:translate-x-24' : 'md:-translate-x-24';
+            const offset = isLeft ? 'md:translate-x-32' : 'md:-translate-x-32';
 
             return (
               <motion.div
                 layout
                 key={task.id}
-                initial={{ opacity: 0, x: isLeft ? 100 : -100, scale: 0.9 }}
+                initial={{ opacity: 0, x: isLeft ? 100 : -100, scale: 0.95 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                className={`group relative w-full max-w-sm ${offset}`}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className={`group relative w-full max-w-md ${offset}`}
               >
-                {/* Connector Dot */}
-                <div className="hidden md:block absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-black border-2 border-purple-500 shadow-[0_0_15px_#a855f7] z-20 group-hover:scale-125 transition-transform" />
+                {/* Visual Connector Dot */}
+                <div className="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 items-center justify-center z-20">
+                    <div className="w-4 h-4 rounded-full bg-white border-2 border-indigo-500 shadow-md group-hover:scale-125 transition-transform" />
+                    <div className="absolute w-full h-[1px] bg-slate-200 -z-10" style={{ [isLeft ? 'right' : 'left']: '50%', width: '128px' }} />
+                </div>
 
                 <div className={`
-                  relative p-6 rounded-[2rem] backdrop-blur-3xl border transition-all duration-500
-                  ${hasConflict ? 'border-red-500/40 bg-red-950/10' : 'border-white/10 bg-white/5 hover:bg-white/[0.08] hover:border-white/20'}
-                  ${isChaos ? 'ring-2 ring-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.2)]' : 'shadow-2xl'}
+                  relative p-8 rounded-[2.5rem] glass-card border-2 transition-all duration-500 hud-border
+                  ${hasConflict ? 'border-rose-400 bg-rose-50/70' : 'border-white hover:border-indigo-200'}
+                  ${isChaos ? 'shadow-[0_20px_50px_rgba(244,63,94,0.1)]' : 'shadow-xl'}
                 `}>
-                  {/* Glowing corner decor */}
-                  <div className="absolute -top-1 -left-1 w-6 h-6 border-t-2 border-l-2 border-purple-500/30 rounded-tl-xl" />
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 border-b-2 border-r-2 border-purple-500/30 rounded-br-xl" />
-
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-xl ${isChaos ? 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]' : 'bg-white/5 border border-white/10'}`}>
-                        {isChaos ? <ShieldAlert size={16} className="text-white" /> : <Clock size={16} className="text-purple-400" />}
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-2xl ${isChaos ? 'bg-rose-500 text-white shadow-lg' : 'bg-indigo-50 text-indigo-500'} transition-transform group-hover:rotate-12`}>
+                        {isChaos ? <ShieldAlert size={20} /> : <Clock size={20} />}
                       </div>
                       <div>
-                        <h4 className="font-orbitron font-black text-[13px] tracking-tight truncate max-w-[140px] text-white/90 uppercase">{task.title}</h4>
-                        <div className="flex items-center gap-1 text-[9px] text-white/30 font-orbitron uppercase tracking-widest mt-0.5">
-                           <Clock size={8} /> {formatTime(task.startTime)} - {task.duration}H
+                        <div className="flex items-center gap-2">
+                            <h4 className="font-orbitron font-black text-[15px] text-slate-800 uppercase italic tracking-tight">{task.title}</h4>
+                            {isChaos && <span className="text-[8px] bg-rose-500 text-white px-2 py-0.5 rounded-full font-orbitron animate-pulse">EMERGENCY</span>}
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-slate-400 font-orbitron uppercase tracking-[0.1em] mt-1 font-bold">
+                           <Activity size={10} className="text-indigo-400" /> {formatTime(task.startTime)} <span className="opacity-30">|</span> {task.duration}H DURATION
                         </div>
                       </div>
                     </div>
-                    <span className={`text-[8px] font-orbitron px-2 py-1 rounded-full border-2 uppercase font-black tracking-widest ${
-                      task.type === 'Work' ? 'border-blue-500/30 text-blue-400 bg-blue-500/5' :
-                      task.type === 'Health' ? 'border-green-500/30 text-green-400 bg-green-500/5' :
-                      task.type === 'Chaos' ? 'border-red-500/30 text-red-400 bg-red-500/5' : 'border-purple-500/30 text-purple-400 bg-purple-500/5'
-                    }`}>
-                      {task.type}
-                    </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-3 mb-2">
-                    <MetricBar value={task.urgency} label="Urgency" icon={Flame} color="text-yellow-400" />
-                    <MetricBar value={task.importance} label="Impact" icon={Target} color="text-purple-400" />
-                    <MetricBar value={task.energyLevel} label="Energy" icon={Zap} color="text-cyan-400" />
+                  <div className="grid grid-cols-3 gap-5 mb-3">
+                    <MetricBar value={task.urgency} label="Urgency" icon={Flame} color="text-amber-500" />
+                    <MetricBar value={task.importance} label="Impact" icon={Target} color="text-rose-500" />
+                    <MetricBar value={task.energyLevel} label="Aether" icon={Zap} color="text-teal-500" />
                   </div>
 
                   {hasConflict && (
                     <motion.div 
-                      animate={{ opacity: [0.6, 1, 0.6] }} 
+                      animate={{ opacity: [0.7, 1, 0.7], y: [0, -2, 0] }} 
                       transition={{ repeat: Infinity, duration: 2 }}
-                      className="text-[9px] font-black text-red-500 uppercase tracking-[0.2em] mt-4 flex items-center justify-center gap-2 bg-red-500/10 p-2 rounded-xl border border-red-500/20"
+                      className="text-[10px] font-black text-rose-500 uppercase tracking-[0.2em] mt-6 flex items-center justify-center gap-3 bg-white/60 p-3 rounded-2xl border border-rose-200 shadow-sm"
                     >
-                      <AlertTriangle size={12} /> Temporal Overlap Detected
+                      <AlertTriangle size={14} /> Temporal Conflict Detected
                     </motion.div>
                   )}
+
+                  {/* Corner Technical Detail */}
+                  <div className="absolute top-4 right-8 opacity-[0.05] pointer-events-none font-orbitron text-[8px] font-black tracking-widest">
+                    NODE_ID: {task.id.slice(-4).toUpperCase()}
+                  </div>
                 </div>
               </motion.div>
             );

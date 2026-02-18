@@ -25,4 +25,5 @@ export interface PlayerStats {
   mana: number;
   xp: number;
   level: number;
+  shards: number; // New reward points currency
 }
